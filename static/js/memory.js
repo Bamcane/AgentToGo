@@ -74,17 +74,17 @@ class MemoryApp {
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">键名</label>
-                        <input id="memory-key" type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        <input id="memory-key" type="text" class="w-full bg-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                placeholder="例如: user_name, home_ip, nas_path">
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">值</label>
-                        <textarea id="memory-value" class="w-full bg-gray-700 rounded-lg px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        <textarea id="memory-value" class="w-full bg-gray-200 rounded-lg px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                   placeholder="记忆的内容"></textarea>
                     </div>
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">分类</label>
-                        <input id="memory-category" type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        <input id="memory-category" type="text" class="w-full bg-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                placeholder="例如: personal, network, hardware" value="general">
                     </div>
                 </div>
@@ -113,11 +113,11 @@ class MemoryApp {
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">值</label>
-                            <textarea id="memory-value" class="w-full bg-gray-700 rounded-lg px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500">${escapeHtml(mem.value)}</textarea>
+                            <textarea id="memory-value" class="w-full bg-gray-200 rounded-lg px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500">${escapeHtml(mem.value)}</textarea>
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">分类</label>
-                            <input id="memory-category" type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            <input id="memory-category" type="text" class="w-full bg-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                                    value="${escapeHtml(mem.category)}">
                         </div>
                     </div>

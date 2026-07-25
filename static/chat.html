@@ -7,15 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+<body class="bg-gray-100 text-gray-100 min-h-screen">
     <div class="flex flex-col h-screen">
-        <header class="bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
+        <header class="bg-gray-200 border-b border-gray-300 px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <a href="/" class="text-blue-400 hover:text-blue-300">← 返回</a>
-                <h1 class="text-xl font-bold text-blue-400">AgentToGo - 聊天</h1>
+                <a href="/" class="text-blue-400 hover:text-blue-500">← 返回</a>
+                <h1 class="text-xl font-bold text-blue-500">AgentToGo - 聊天</h1>
             </div>
             <div class="flex items-center gap-4">
-                <button id="notification-btn" class="relative p-2 hover:bg-gray-700 rounded-lg">
+                <button id="notification-btn" class="relative p-2 hover:bg-gray-200 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                     </svg>
@@ -25,8 +25,8 @@
         </header>
 
         <main class="flex-1 overflow-hidden flex">
-            <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
-                <div class="p-3 border-b border-gray-700">
+            <aside class="w-64 bg-gray-100 border-r border-gray-200 flex flex-col">
+                <div class="p-3 border-b border-gray-200">
                     <button id="new-chat-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg text-sm">
                         + 新建会话
                     </button>
@@ -40,9 +40,9 @@
                         选择或创建一个会话开始聊天
                     </div>
                 </div>
-                <div class="border-t border-gray-700 p-4">
+                <div class="border-t border-gray-200 p-4">
                     <div class="flex gap-2">
-                        <textarea id="chat-input" class="flex-1 bg-gray-700 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" rows="1" placeholder="输入消息..."></textarea>
+                        <textarea id="chat-input" class="flex-1 bg-gray-200 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" rows="1" placeholder="输入消息..."></textarea>
                         <button id="send-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-lg">发送</button>
                     </div>
                 </div>
@@ -50,9 +50,9 @@
         </main>
     </div>
 
-    <div id="notification-panel" class="hidden fixed right-0 top-0 h-full w-96 bg-gray-800 border-l border-gray-700 shadow-xl z-40 overflow-y-auto">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-            <h3 class="text-lg font-bold">通知</h3>
+    <div id="notification-panel" class="hidden fixed right-0 top-0 h-full w-96 bg-gray-300 border-l border-gray-200 shadow-xl z-40 overflow-y-auto">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-gray-500">通知</h3>
             <button id="mark-all-read" class="text-sm text-blue-400 hover:text-blue-300">全部已读</button>
         </div>
         <div id="notification-list" class="p-4 space-y-3">
