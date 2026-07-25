@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AgentToGo Hardware - LLM API Local Proxy Service
+AgentToGo Hardware - LLM API Local Proxy Service (Fixed Encoding)
 自动将本地 127.0.0.1:<端口> 映射到已配置的 LLM API
 支持命令行指定配置和一键安装为 Linux systemd 系统服务
 """
@@ -92,12 +92,23 @@ def save_config(config):
     print(f"[✓] 配置已保存到: {CONFIG_FILE}")
 
 # ============================================================
-#  代理核心逻辑
+#  代理核心逻辑（已修复编码问题）
 # ============================================================
+def _decode_header_value(value):
+    """安全地解码HTTP头值，处理非UTF-8字符"""
+    if isinstance(value, bytes):
+        try:
+            return value.decode('utf-8')
+        except UnicodeDecodeError:
+            # 使用 latin-1 作为 fallback，它永远不会失败
+            # 这样可以保留原始字节信息
+            return value.decode('latin-1', errors='replace')
+    return str(value)
+
 @app.route('/', defaults={'path': ''}, methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 @app.route('/<path:path>', methods=['GET', 'POST', 'PUT', 'DELETE', 'PATCH'])
 def proxy(path):
-    """将所有请求转发到目标 LLM API"""
+    """将所有请求转发到目标 LLM API（已修复编码问题）"""
     try:
         target_url = f"{current_config['target_url'].rstrip('/')}/{path.lstrip('/')}"
         if not path:
@@ -133,13 +144,21 @@ def proxy(path):
             timeout=60
         )
         
+        # 正确处理响应头（修复编码问题）
         excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-        resp_headers = [(name, value) for name, value in resp.raw.headers.items()
-                       if name.lower() not in excluded_headers]
+        resp_headers = []
+        for name, value in resp.raw.headers.items():
+            if name.lower() not in excluded_headers:
+                # 关键修复：安全解码头值，避免UTF-8解码错误
+                safe_value = _decode_header_value(value)
+                resp_headers.append((name, safe_value))
         
-        return Response(resp.iter_content(chunk_size=1024), 
-                       status=resp.status_code, 
-                       headers=resp_headers)
+        # 返回响应（确保二进制数据正确传输）
+        return Response(
+            resp.iter_content(chunk_size=1024),
+            status=resp.status_code,
+            headers=resp_headers
+        )
         
     except requests.exceptions.Timeout:
         return jsonify({"error": "请求超时"}), 504
@@ -166,7 +185,6 @@ def create_service_file(config):
     """创建 systemd 服务文件"""
     python_path = sys.executable
     
-    # 服务启动命令，包含配置文件路径
     exec_start = f"{python_path} {SCRIPT_PATH} --run --config {CONFIG_FILE}"
     
     service_content = f"""[Unit]
@@ -199,26 +217,20 @@ def install_service(config):
     
     print(f"[*] 正在安装 {DEFAULT_CONFIG['service_name']} 服务...")
     
-    # 创建安装目录
     INSTALL_DIR.mkdir(parents=True, exist_ok=True)
     
-    # 复制脚本到安装目录
     current_script = Path(__file__).resolve()
     shutil.copy2(current_script, SCRIPT_PATH)
     SCRIPT_PATH.chmod(0o755)
     print(f"[✓] 脚本已复制到: {SCRIPT_PATH}")
     
-    # 保存配置
     save_config(config)
     
-    # 创建日志目录
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     LOG_FILE.touch(mode=0o644, exist_ok=True)
     
-    # 创建服务文件
     create_service_file(config)
     
-    # 重载 systemd 并启用服务
     subprocess.run(["systemctl", "daemon-reload"], check=True)
     subprocess.run(["systemctl", "enable", DEFAULT_CONFIG["service_name"]], check=True)
     subprocess.run(["systemctl", "start", DEFAULT_CONFIG["service_name"]], check=True)
@@ -237,21 +249,17 @@ def uninstall_service():
     
     print(f"[*] 正在卸载 {DEFAULT_CONFIG['service_name']} 服务...")
     
-    # 停止并禁用服务
     subprocess.run(["systemctl", "stop", DEFAULT_CONFIG["service_name"]], check=False)
     subprocess.run(["systemctl", "disable", DEFAULT_CONFIG["service_name"]], check=False)
     
-    # 删除服务文件
     if SERVICE_FILE.exists():
         SERVICE_FILE.unlink()
         print(f"[✓] 已删除服务文件: {SERVICE_FILE}")
     
-    # 删除安装目录
     if INSTALL_DIR.exists():
         shutil.rmtree(INSTALL_DIR)
         print(f"[✓] 已删除安装目录: {INSTALL_DIR}")
     
-    # 重载 systemd
     subprocess.run(["systemctl", "daemon-reload"], check=True)
     
     print(f"\n[✓] {DEFAULT_CONFIG['service_name']} 服务已卸载")
@@ -267,7 +275,6 @@ def run_server(config):
     print(f"    使用模型:  {config['model']}")
     print(f"    按 Ctrl+C 停止服务\n")
     
-    # 写入 PID 文件
     PID_FILE.write_text(str(os.getpid()))
     
     try:
@@ -303,13 +310,9 @@ def update_service_config(new_config):
         print("[!] 更新配置需要 root 权限")
         return False
     
-    # 保存新配置
     save_config(new_config)
-    
-    # 重建服务文件
     create_service_file(new_config)
     
-    # 重载 systemd 并重启服务
     subprocess.run(["systemctl", "daemon-reload"], check=True)
     subprocess.run(["systemctl", "restart", DEFAULT_CONFIG["service_name"]], check=True)
     
@@ -342,14 +345,12 @@ def main():
         """
     )
     
-    # 配置参数（全局可用）
     config_group = parser.add_argument_group("配置参数")
     config_group.add_argument("--api-key", help="LLM API Key")
     config_group.add_argument("--model", help="模型名称")
     config_group.add_argument("--port", type=int, help="本地监听端口")
     config_group.add_argument("--target-url", help="目标 LLM API 地址")
     
-    # 操作模式（互斥）
     mode_group = parser.add_mutually_exclusive_group(required=True)
     mode_group.add_argument("--install", action="store_true", help="安装为系统服务")
     mode_group.add_argument("--uninstall", action="store_true", help="卸载系统服务")
@@ -359,10 +360,8 @@ def main():
     
     args = parser.parse_args()
     
-    # 加载基础配置
     config = load_config()
     
-    # 合并命令行参数（优先级最高）
     if args.api_key:
         config['api_key'] = args.api_key
     if args.model:
@@ -372,13 +371,11 @@ def main():
     if args.target_url:
         config['target_url'] = args.target_url
     
-    # 验证必要配置
     if args.run or args.install or args.update:
         if not config['api_key']:
             print("[!] 错误: 必须指定 --api-key 或设置 AGENTTOGO_API_KEY 环境变量")
             sys.exit(1)
     
-    # 执行对应操作
     if args.install:
         install_service(config)
     elif args.uninstall:
