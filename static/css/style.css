@@ -36,6 +36,10 @@
 }
 
 .tab-content.active {
+    display: block;
+}
+
+#chat-tab.tab-content.active {
     display: flex;
 }
 

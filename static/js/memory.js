@@ -1,6 +1,12 @@
-class Memory {
+class MemoryApp {
     constructor() {
         this.bindEvents();
+        this.loadMemories();
+    }
+
+    formatTime(dateStr) {
+        const date = new Date(dateStr + 'Z');
+        return date.toLocaleString('zh-CN');
     }
 
     bindEvents() {
@@ -37,20 +43,20 @@ class Memory {
 
         container.innerHTML = Object.entries(grouped).map(([category, items]) => `
             <div class="mb-6">
-                <h3 class="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">${app.escapeHtml(category)}</h3>
+                <h3 class="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">${escapeHtml(category)}</h3>
                 <div class="space-y-2">
                     ${items.map(m => `
                         <div class="memory-item" data-id="${m.id}">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
-                                    <div class="font-medium text-blue-400">${app.escapeHtml(m.key)}</div>
-                                    <div class="text-gray-300 mt-1 text-sm">${app.escapeHtml(m.value)}</div>
-                                    <div class="text-gray-500 text-xs mt-2">更新于 ${new Date(m.updated_at).toLocaleString()}</div>
+                                    <div class="font-medium text-blue-400">${escapeHtml(m.key)}</div>
+                                    <div class="text-gray-300 mt-1 text-sm">${escapeHtml(m.value)}</div>
+                                    <div class="text-gray-500 text-xs mt-2">更新于 ${this.formatTime(m.updated_at)}</div>
                                 </div>
                                 <div class="flex gap-1 ml-4">
-                                    <button onclick="memory.editMemory(${m.id})" 
+                                    <button onclick="memoryApp.editMemory(${m.id})" 
                                             class="text-gray-400 hover:text-blue-400 p-1">编辑</button>
-                                    <button onclick="memory.deleteMemory(${m.id})" 
+                                    <button onclick="memoryApp.deleteMemory(${m.id})" 
                                             class="text-gray-400 hover:text-red-400 p-1">删除</button>
                                 </div>
                             </div>
@@ -62,7 +68,7 @@ class Memory {
     }
 
     showAddModal() {
-        app.showModal(`
+        showModal(`
             <div class="p-6">
                 <h3 class="text-xl font-bold mb-4">添加记忆</h3>
                 <div class="space-y-4">
@@ -83,8 +89,8 @@ class Memory {
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 mt-6">
-                    <button onclick="app.hideModal()" class="btn-secondary text-white px-4 py-2 rounded">取消</button>
-                    <button onclick="memory.saveMemory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">保存</button>
+                    <button onclick="hideModal()" class="btn-secondary text-white px-4 py-2 rounded">取消</button>
+                    <button onclick="memoryApp.saveMemory()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">保存</button>
                 </div>
             </div>
         `);
@@ -97,27 +103,27 @@ class Memory {
             const mem = memories.find(m => m.id === memoryId);
             if (!mem) return;
 
-            app.showModal(`
+            showModal(`
                 <div class="p-6">
                     <h3 class="text-xl font-bold mb-4">编辑记忆</h3>
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">键名</label>
-                            <div class="text-gray-300">${app.escapeHtml(mem.key)}</div>
+                            <div class="text-gray-300">${escapeHtml(mem.key)}</div>
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">值</label>
-                            <textarea id="memory-value" class="w-full bg-gray-700 rounded-lg px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500">${app.escapeHtml(mem.value)}</textarea>
+                            <textarea id="memory-value" class="w-full bg-gray-700 rounded-lg px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500">${escapeHtml(mem.value)}</textarea>
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">分类</label>
                             <input id="memory-category" type="text" class="w-full bg-gray-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                                   value="${app.escapeHtml(mem.category)}">
+                                   value="${escapeHtml(mem.category)}">
                         </div>
                     </div>
                     <div class="flex justify-end gap-2 mt-6">
-                        <button onclick="app.hideModal()" class="btn-secondary text-white px-4 py-2 rounded">取消</button>
-                        <button onclick="memory.updateMemory(${memoryId})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">更新</button>
+                        <button onclick="hideModal()" class="btn-secondary text-white px-4 py-2 rounded">取消</button>
+                        <button onclick="memoryApp.updateMemory(${memoryId})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">更新</button>
                     </div>
                 </div>
             `);
@@ -144,7 +150,7 @@ class Memory {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            app.hideModal();
+            hideModal();
             this.loadMemories();
         } catch (error) {
             console.error('保存记忆失败:', error);
@@ -169,7 +175,7 @@ class Memory {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            app.hideModal();
+            hideModal();
             this.loadMemories();
         } catch (error) {
             console.error('更新记忆失败:', error);
@@ -190,4 +196,4 @@ class Memory {
     }
 }
 
-const memory = new Memory();
+const memoryApp = new MemoryApp();

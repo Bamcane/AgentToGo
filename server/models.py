@@ -11,6 +11,9 @@ class ConversationResponse(BaseModel):
     created_at: str
     updated_at: str
 
+class ConversationUpdate(BaseModel):
+    title: str
+
 class MessageCreate(BaseModel):
     content: str
 
@@ -42,6 +45,7 @@ class LoopTaskCreate(BaseModel):
     name: str
     description: Optional[str] = ""
     script: str
+    user_requirement: Optional[str] = ""
     interval_seconds: int = 60
     timeout_seconds: int = 30
 
@@ -49,6 +53,7 @@ class LoopTaskUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     script: Optional[str] = None
+    user_requirement: Optional[str] = None
     interval_seconds: Optional[int] = None
     timeout_seconds: Optional[int] = None
     enabled: Optional[bool] = None
@@ -58,6 +63,7 @@ class LoopTaskResponse(BaseModel):
     name: str
     description: Optional[str]
     script: str
+    user_requirement: Optional[str]
     interval_seconds: int
     timeout_seconds: int
     enabled: bool

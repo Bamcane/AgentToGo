@@ -2,9 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import uuid
 from database import get_db
-from models import LoopTaskCreate, LoopTaskUpdate, LoopTaskResponse, GenerateTaskRequest
-from llm_service import llm_service
-from task_executor import task_executor
+from models import LoopTaskCreate, LoopTaskUpdate, LoopTaskResponse
 
 router = APIRouter()
 
@@ -18,23 +16,6 @@ async def list_tasks():
         d["enabled"] = bool(d["enabled"])
         result.append(d)
     return result
-
-@router.post("/", response_model=LoopTaskResponse)
-async def create_task(data: LoopTaskCreate):
-    task_id = str(uuid.uuid4())
-    with get_db() as db:
-        db.execute(
-            """INSERT INTO loop_tasks (id, name, description, script, interval_seconds, timeout_seconds) 
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (task_id, data.name, data.description, data.script, data.interval_seconds, data.timeout_seconds)
-        )
-        row = db.execute("SELECT * FROM loop_tasks WHERE id = ?", (task_id,)).fetchone()
-    
-    task_executor.add_task(dict(row))
-    
-    d = dict(row)
-    d["enabled"] = bool(d["enabled"])
-    return d
 
 @router.put("/{task_id}", response_model=LoopTaskResponse)
 async def update_task(task_id: str, data: LoopTaskUpdate):
@@ -54,6 +35,9 @@ async def update_task(task_id: str, data: LoopTaskUpdate):
         if data.script is not None:
             updates.append("script = ?")
             params.append(data.script)
+        if data.user_requirement is not None:
+            updates.append("user_requirement = ?")
+            params.append(data.user_requirement)
         if data.interval_seconds is not None:
             updates.append("interval_seconds = ?")
             params.append(data.interval_seconds)
@@ -74,11 +58,6 @@ async def update_task(task_id: str, data: LoopTaskUpdate):
         
         row = db.execute("SELECT * FROM loop_tasks WHERE id = ?", (task_id,)).fetchone()
     
-    if data.enabled is False:
-        task_executor.remove_task(task_id)
-    else:
-        task_executor.add_task(dict(row))
-    
     d = dict(row)
     d["enabled"] = bool(d["enabled"])
     return d
@@ -87,21 +66,4 @@ async def update_task(task_id: str, data: LoopTaskUpdate):
 async def delete_task(task_id: str):
     with get_db() as db:
         db.execute("DELETE FROM loop_tasks WHERE id = ?", (task_id,))
-    task_executor.remove_task(task_id)
     return {"status": "ok"}
-
-@router.post("/generate")
-async def generate_task(data: GenerateTaskRequest):
-    with get_db() as db:
-        memories = db.execute("SELECT key, value FROM memories").fetchall()
-        memory_list = [dict(m) for m in memories]
-    
-    result = await llm_service.generate_task_script(data.description, memory_list)
-    
-    return {
-        "name": data.description[:50],
-        "description": result.get("description", ""),
-        "script": result.get("script", ""),
-        "interval_seconds": result.get("interval_seconds", 60),
-        "timeout_seconds": result.get("timeout_seconds", 30)
-    }

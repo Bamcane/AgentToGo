@@ -1,6 +1,89 @@
 import httpx
+import json
 from typing import AsyncGenerator, List, Dict, Optional
 from config import LLM_API_BASE, LLM_API_KEY, LLM_MODEL
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "save_memory",
+            "description": "保存一条记忆到记忆中。当你认为某些信息对用户很重要，值得长期保存时使用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string", "description": "记忆的键名，例如: user_name, home_ip, nas_path"},
+                    "value": {"type": "string", "description": "记忆的内容"},
+                    "category": {"type": "string", "description": "分类，例如: personal, network, hardware", "default": "general"}
+                },
+                "required": ["key", "value"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "delete_memory",
+            "description": "删除一条记忆。当某条记忆不再有用时调用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "key": {"type": "string", "description": "要删除的记忆键名"}
+                },
+                "required": ["key"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "create_loop_task",
+            "description": "创建一个循环执行的任务。当用户要求你定期检查某些事项时使用。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "description": "任务名称"},
+                    "description": {"type": "string", "description": "任务说明"},
+                    "script": {"type": "string", "description": "Python脚本，必须包含 async def check(context: dict) -> dict 函数，返回 {'triggered': bool, 'message': str}"},
+                    "user_requirement": {"type": "string", "description": "用户的要求，例如：提醒我、通知我等"},
+                    "interval_seconds": {"type": "integer", "description": "执行间隔秒数", "default": 60},
+                    "timeout_seconds": {"type": "integer", "description": "执行超时秒数", "default": 30}
+                },
+                "required": ["name", "script", "user_requirement"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "stop_loop_task",
+            "description": "停止一个正在运行的循环任务。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string", "description": "任务ID"}
+                },
+                "required": ["task_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_memories",
+            "description": "列出所有记忆。当需要查看用户已保存的信息时使用。",
+            "parameters": {"type": "object", "properties": {}}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_tasks",
+            "description": "列出所有循环任务。",
+            "parameters": {"type": "object", "properties": {}}
+        }
+    }
+]
 
 class LLMService:
     def __init__(self):
@@ -26,6 +109,25 @@ class LLMService:
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
     
+    async def chat_with_tools(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> Dict:
+        response = await self.client.post(
+            f"{self.api_base}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": self.model,
+                "messages": messages,
+                "temperature": temperature,
+                "tools": TOOLS,
+                "tool_choice": "auto",
+                "stream": False
+            }
+        )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]
+    
     async def chat_stream(self, messages: List[Dict[str, str]], temperature: float = 0.7) -> AsyncGenerator[str, None]:
         async with self.client.stream(
             "POST",
@@ -48,7 +150,7 @@ class LLMService:
                     if data.strip() == "[DONE]":
                         break
                     try:
-                        chunk = __import__("json").loads(data)
+                        chunk = json.loads(data)
                         if "choices" in chunk and len(chunk["choices"]) > 0:
                             delta = chunk["choices"][0].get("delta", {})
                             if "content" in delta:

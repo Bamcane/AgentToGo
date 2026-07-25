@@ -4,6 +4,13 @@ from config import DATABASE_PATH
 
 def init_db():
     with get_db() as db:
+        # 检查并添加user_requirement字段
+        cursor = db.execute("PRAGMA table_info(loop_tasks)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if "user_requirement" not in columns:
+            db.execute("ALTER TABLE loop_tasks ADD COLUMN user_requirement TEXT DEFAULT ''")
+        
         db.executescript("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id TEXT PRIMARY KEY,
@@ -35,6 +42,7 @@ def init_db():
                 name TEXT NOT NULL,
                 description TEXT,
                 script TEXT NOT NULL,
+                user_requirement TEXT DEFAULT '',
                 interval_seconds INTEGER NOT NULL DEFAULT 60,
                 timeout_seconds INTEGER NOT NULL DEFAULT 30,
                 enabled INTEGER NOT NULL DEFAULT 1,
@@ -49,7 +57,7 @@ def init_db():
                 task_id TEXT,
                 task_name TEXT,
                 message TEXT NOT NULL,
-                action TEXT NOT NULL DEFAULT 'notify_continue',
+                action TEXT NOT NULL DEFAULT 'notify',
                 read INTEGER NOT NULL DEFAULT 0,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (task_id) REFERENCES loop_tasks(id) ON DELETE SET NULL

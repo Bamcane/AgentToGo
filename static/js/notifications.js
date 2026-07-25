@@ -1,11 +1,31 @@
-class Notifications {
+class NotificationsApp {
     constructor() {
         this.panelOpen = false;
         this.bindEvents();
+        this.loadUnreadCount();
     }
 
     bindEvents() {
-        document.getElementById('mark-all-read').addEventListener('click', () => this.markAllAsRead());
+        const markAllBtn = document.getElementById('mark-all-read');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', () => this.markAllAsRead());
+        }
+        
+        const notificationBtn = document.getElementById('notification-btn');
+        if (notificationBtn) {
+            notificationBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.togglePanel();
+            });
+        }
+        
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notification-panel');
+            const btn = document.getElementById('notification-btn');
+            if (this.panelOpen && panel && !panel.contains(e.target) && btn && !btn.contains(e.target)) {
+                this.closePanel();
+            }
+        });
     }
 
     async loadUnreadCount() {
@@ -20,6 +40,8 @@ class Notifications {
 
     updateBadge(count) {
         const badge = document.getElementById('notification-badge');
+        if (!badge) return;
+        
         if (count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
             badge.classList.remove('hidden');
@@ -29,13 +51,26 @@ class Notifications {
     }
 
     togglePanel() {
-        this.panelOpen = !this.panelOpen;
-        const panel = document.getElementById('notification-panel');
-        
         if (this.panelOpen) {
+            this.closePanel();
+        } else {
+            this.openPanel();
+        }
+    }
+
+    openPanel() {
+        this.panelOpen = true;
+        const panel = document.getElementById('notification-panel');
+        if (panel) {
             panel.classList.remove('hidden');
             this.loadNotifications();
-        } else {
+        }
+    }
+
+    closePanel() {
+        this.panelOpen = false;
+        const panel = document.getElementById('notification-panel');
+        if (panel) {
             panel.classList.add('hidden');
         }
     }
@@ -52,6 +87,7 @@ class Notifications {
 
     renderNotifications(notifications) {
         const container = document.getElementById('notification-list');
+        if (!container) return;
         
         if (notifications.length === 0) {
             container.innerHTML = `
@@ -63,13 +99,13 @@ class Notifications {
         container.innerHTML = notifications.map(n => `
             <div class="notification-item ${!n.read ? 'unread' : ''}" data-id="${n.id}">
                 <div class="flex justify-between items-start mb-2">
-                    <span class="font-medium text-sm">${app.escapeHtml(n.task_name || '系统通知')}</span>
+                    <span class="font-medium text-sm">${escapeHtml(n.task_name || '系统通知')}</span>
                     <span class="text-xs text-gray-500">${this.formatTime(n.created_at)}</span>
                 </div>
-                <div class="text-sm text-gray-300 mb-2">${app.escapeHtml(n.message)}</div>
+                <div class="text-sm text-gray-300 mb-2">${escapeHtml(n.message)}</div>
                 <div class="flex justify-between items-center">
                     <span class="text-xs px-2 py-1 rounded bg-gray-700 text-gray-400">${this.getActionLabel(n.action)}</span>
-                    ${!n.read ? `<button onclick="notifications.markAsRead(${n.id})" class="text-xs text-blue-400 hover:text-blue-300">标为已读</button>` : ''}
+                    ${!n.read ? `<button onclick="notificationsApp.markAsRead(${n.id})" class="text-xs text-blue-400 hover:text-blue-300">标为已读</button>` : ''}
                 </div>
             </div>
         `).join('');
@@ -86,14 +122,15 @@ class Notifications {
     }
 
     formatTime(dateStr) {
-        const date = new Date(dateStr);
+        // 数据库存的是UTC时间，需要转换为本地时间
+        const date = new Date(dateStr + 'Z');  // 添加Z表示UTC时间
         const now = new Date();
         const diff = now - date;
         
         if (diff < 60000) return '刚刚';
         if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
         if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
-        return date.toLocaleDateString();
+        return date.toLocaleString('zh-CN');
     }
 
     async markAsRead(notificationId) {
@@ -121,4 +158,4 @@ class Notifications {
     }
 }
 
-const notifications = new Notifications();
+const notificationsApp = new NotificationsApp();
