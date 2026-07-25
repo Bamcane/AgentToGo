@@ -8,8 +8,8 @@ fi
 
 source venv/bin/activate
 
-echo "安装依赖..."
+#echo "安装依赖..."
 pip install -r server/requirements.txt
 
-echo "启动 AgentToGo..."
+#echo "启动 AgentToGo..."
 python server/main.py
