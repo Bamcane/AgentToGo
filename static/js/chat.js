@@ -176,7 +176,7 @@ class ChatApp {
         let html = escapeHtml(content);
         
         html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
-        html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-600 px-1 rounded">$1</code>');
+        html = html.replace(/`([^`]+)`/g, '<code class="bg-gray-200 px-1 rounded">$1</code>');
         html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/\n/g, '<br>');
         

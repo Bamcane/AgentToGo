@@ -104,7 +104,7 @@ class NotificationsApp {
                 </div>
                 <div class="text-sm text-gray-300 mb-2">${escapeHtml(n.message)}</div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs px-2 py-1 rounded bg-gray-700 text-gray-400">${this.getActionLabel(n.action)}</span>
+                    <span class="text-xs px-2 py-1 rounded bg-gray-300 text-gray-400">${this.getActionLabel(n.action)}</span>
                     ${!n.read ? `<button onclick="notificationsApp.markAsRead(${n.id})" class="text-xs text-blue-400 hover:text-blue-300">标为已读</button>` : ''}
                 </div>
             </div>

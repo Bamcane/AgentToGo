@@ -35,7 +35,7 @@ class TasksApp {
                         ${task.description ? `<p class="text-gray-400 text-sm mt-1">${escapeHtml(task.description)}</p>` : ''}
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="text-xs px-2 py-1 rounded ${task.enabled ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-400'}">
+                        <span class="text-xs px-2 py-1 rounded ${task.enabled ? 'bg-green-900 text-green-300' : 'bg-gray-300 text-gray-400'}">
                             ${task.enabled ? '运行中' : '已停止'}
                         </span>
                     </div>
